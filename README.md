@@ -62,6 +62,27 @@ Includes initial seed data:
 
 ---
 
+## 📌 Phase 3: User & Parking Slot DAOs
+
+### 1. `dao/UserDAO.java`
+- `int registerUser(User user)`: Inserts a new user into `USERS` and extracts the generated ID via `Statement.RETURN_GENERATED_KEYS`.
+- `User getUserById(int userId)`: Queries a user record by primary key.
+- `User getUserByVehicleNumber(String vehicleNumber)`: Queries a user record by unique vehicle number.
+- `User getUserByEmail(String email)`: Helper to check/fetch user by email.
+- `List<User> getAllUsers()`: Lists all registered campus users.
+
+### 2. `dao/ParkingSlotDAO.java`
+- `boolean addParkingSlot(ParkingSlot slot)`: Inserts a new parking spot into `PARKING_SLOTS`.
+- `List<ParkingSlot> getAvailableSlots(String parkingArea, SlotType slotType)`: Queries `AVAILABLE` slots filtered by campus area and vehicle type.
+- `List<ParkingSlot> getAllAvailableSlots()`: Overloaded method retrieving all currently available spots campus-wide.
+- `boolean updateSlotStatus(int slotId, SlotStatus newStatus)`: Modifies the status of a specific slot (`AVAILABLE`, `RESERVED`, `OCCUPIED`).
+- `List<ParkingSlot> getAllSlots()`: Returns complete inventory of slots across all areas and statuses.
+- `ParkingSlot getSlotById(int slotId)` & `ParkingSlot getSlotByNumber(String slotNumber)`: Slot lookup helpers.
+
+All DAO operations utilize `PreparedStatement` and `try-with-resources` ensuring protection against SQL injection and avoiding database connection leaks.
+
+---
+
 ## 🚀 Getting Started
 
 ### Database Setup
