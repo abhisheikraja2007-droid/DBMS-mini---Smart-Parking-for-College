@@ -626,6 +626,7 @@ public class SmartParkingApp {
             Thread.currentThread().interrupt();
         }
         scanner.close();
+        com.college.smartparking.config.DatabaseConnection.shutdownCleanup();
         System.out.println("👋 Thank you for using Smart Parking for College. Goodbye!");
     }
 }

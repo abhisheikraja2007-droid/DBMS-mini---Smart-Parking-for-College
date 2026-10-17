@@ -69,4 +69,15 @@ public class DatabaseConnection {
             }
         }
     }
+
+    /**
+     * Shuts down MySQL driver's abandoned connection cleanup thread to prevent thread lingering.
+     */
+    public static void shutdownCleanup() {
+        try {
+            com.mysql.cj.jdbc.AbandonedConnectionCleanupThread.checkedShutdown();
+        } catch (Throwable ignored) {
+            // Suppress if not needed
+        }
+    }
 }
