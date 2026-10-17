@@ -110,6 +110,29 @@ All methods modifying multiple tables run under explicit JDBC transactions (`con
 
 ---
 
+## 📌 Phase 5: Interactive Menu-Driven Console Interface & Alerts
+
+### `ui/SmartParkingApp.java`
+Main console application tying all components together with an interactive `Scanner`-based CLI:
+
+1. **Automatic Expiry Hook & Background Scheduler**:
+   - `ScheduledExecutorService` runs in the background every 60 seconds executing `reservationDAO.releaseExpiredReservations()`.
+   - Also automatically invoked before querying available slots and prior to processing check-ins.
+   - When overdue reservations are detected and released, a prominent **`[EXPIRATION ALERT]`** banner is printed to the console.
+
+2. **Menu Options**:
+   - **`[1] Register User (Student / Staff)`**: Collects name, email, contact, and vehicle number; returns newly generated `User ID`.
+   - **`[2] Add / Manage Parking Slots (Admin)`**: Submenu to insert new parking spots across campus or manually update slot statuses (`AVAILABLE`, `RESERVED`, `OCCUPIED`).
+   - **`[3] View Available Parking Slots`**: Allows filtering by Campus Area (`Main Block`, `Hostel Block`, etc.) and Vehicle Type (`TWO_WHEELER`, `FOUR_WHEELER`) or viewing all available spaces campus-wide in an ASCII table.
+   - **`[4] Reserve a Parking Slot`**: Prompts for `user_id`, `slot_id`, and arrival window (e.g., 15 or 30 minutes); outputs a formatted **`[RESERVATION CONFIRMATION]`** alert with reservation ID and formatted arrival deadline.
+   - **`[5] View & Cancel My Reservations`**: Displays all reservations for a user with status, deadline, and arrival times; allows cancellation of active `CONFIRMED` bookings with atomic slot release.
+   - **`[6] Vehicle Check-In`**: Validates arrival deadline with automatic expiry check. Rejects check-in with an **`[EXPIRATION ALERT]`** if overdue; otherwise marks reservation `ACTIVE` and slot `OCCUPIED` with timestamp (`yyyy-MM-dd HH:mm:ss`).
+   - **`[7] Vehicle Check-Out`**: Completes active reservations, marks slot `AVAILABLE`, and confirms vehicle departure.
+   - **`[8] Run Manual Slot Expiry Check & View Campus Dashboard`**: Triggers immediate expiry check and displays real-time percentage statistics and status breakdown across all campus slots.
+   - **`[0] Exit`**: Performs clean shutdown of the background scheduler and closes resources.
+
+---
+
 ## 🚀 Getting Started
 
 ### Database Setup
