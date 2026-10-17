@@ -12,7 +12,7 @@ public class DatabaseConnection {
 
     private static final String DEFAULT_URL = "jdbc:mysql://localhost:3306/smart_parking?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC";
     private static final String DEFAULT_USER = "root";
-    private static final String DEFAULT_PASSWORD = "root";
+    private static final String DEFAULT_PASSWORD = "1234";
 
     private static final String URL;
     private static final String USER;
@@ -78,6 +78,51 @@ public class DatabaseConnection {
             com.mysql.cj.jdbc.AbandonedConnectionCleanupThread.checkedShutdown();
         } catch (Throwable ignored) {
             // Suppress if not needed
+        }
+    }
+
+    /**
+     * Automatically ensures database smart_parking and required tables exist.
+     * If missing, executes schema.sql.
+     */
+    public static void initializeDatabaseIfMissing() {
+        String baseUrl = "jdbc:mysql://localhost:3306/?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC";
+        try (Connection serverConn = DriverManager.getConnection(baseUrl, USER, PASSWORD);
+             java.sql.Statement stmt = serverConn.createStatement()) {
+            stmt.executeUpdate("CREATE DATABASE IF NOT EXISTS smart_parking");
+        } catch (SQLException e) {
+            // If cannot connect to root URL, continue to test target URL
+        }
+
+        try (Connection conn = getConnection();
+             java.sql.Statement stmt = conn.createStatement();
+             java.sql.ResultSet rs = stmt.executeQuery("SHOW TABLES LIKE 'USERS'")) {
+
+            if (!rs.next()) {
+                System.out.println("[DatabaseConnection] Initializing database tables and seed data from schema.sql...");
+                executeSchemaScript(conn);
+                System.out.println("[DatabaseConnection] Database initialization complete.");
+            }
+        } catch (Exception e) {
+            System.err.println("[DatabaseConnection] Notice during DB initialization: " + e.getMessage());
+        }
+    }
+
+    private static void executeSchemaScript(Connection conn) {
+        try (java.io.InputStream in = DatabaseConnection.class.getResourceAsStream("/schema.sql")) {
+            if (in == null) return;
+            String sqlContent = new String(in.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
+            String[] statements = sqlContent.split(";");
+            try (java.sql.Statement stmt = conn.createStatement()) {
+                for (String sql : statements) {
+                    String trimmed = sql.trim();
+                    if (!trimmed.isEmpty()) {
+                        stmt.execute(trimmed);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("[DatabaseConnection] Error executing schema script: " + e.getMessage());
         }
     }
 }

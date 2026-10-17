@@ -55,6 +55,7 @@ public class SmartParkingApp {
      */
     public void start() {
         printBanner();
+        com.college.smartparking.config.DatabaseConnection.initializeDatabaseIfMissing();
         startBackgroundExpiryEngine();
 
         // Perform initial check on startup
