@@ -83,6 +83,33 @@ All DAO operations utilize `PreparedStatement` and `try-with-resources` ensuring
 
 ---
 
+## 📌 Phase 4: Transactional Reservation, Check-In/Out & Auto-Expiry Engine
+
+### `dao/ReservationDAO.java`
+All methods modifying multiple tables run under explicit JDBC transactions (`conn.setAutoCommit(false)`, `commit()`, and `rollback()` in catch):
+- **`int createReservation(int userId, int slotId, int deadlineMinutes)`**:
+  - Validates slot availability with row-level lock (`SELECT ... FOR UPDATE`).
+  - Sets `reservation_time = now()` and `arrival_deadline = now() + deadlineMinutes`.
+  - Atomically creates `CONFIRMED` reservation and flips slot status to `RESERVED`.
+  - Returns generated `reservation_id`.
+- **`boolean cancelReservation(int reservationId, int userId)`**:
+  - Verifies user ownership and that status is `CONFIRMED`.
+  - Atomically marks reservation `CANCELLED` and releases slot back to `AVAILABLE`.
+- **`boolean checkIn(int reservationId)`**:
+  - Verifies reservation is `CONFIRMED` and current time is before `arrival_deadline`.
+  - Records `arrival_time = now()`, changes reservation status to `ACTIVE`, and marks slot `OCCUPIED`.
+- **`boolean checkOut(int reservationId)`**:
+  - Verifies reservation is `ACTIVE`.
+  - Marks reservation `COMPLETED` and frees slot back to `AVAILABLE`.
+- **`int releaseExpiredReservations()` (Auto-Expiry Engine)**:
+  - Scans for reservations where `status = 'CONFIRMED'` and `arrival_deadline < NOW()`.
+  - Batch/transactionally transitions them to `EXPIRED` and frees corresponding slots to `AVAILABLE`.
+  - Returns the count of released slots for notification alerts.
+- **`List<ParkingReservation> getReservationsByUser(int userId)`**:
+  - Retrieves chronological history of reservations for a user.
+
+---
+
 ## 🚀 Getting Started
 
 ### Database Setup
